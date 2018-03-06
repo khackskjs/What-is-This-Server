@@ -9,25 +9,32 @@ var connection = mysql.createConnection({
   port     : 3306//process.env.RDS_PORT
 });
 
+/**
+ * 
+ * @param {String} sql 
+ */
+function logDao(sql) {
+  console.log(`SQL ${sql}`);
+}
+
 connection.connect(function(err) {
   if (err) {
     console.error('Database connection failed: ' + err.stack);
     return;
   }
   
-  console.log('Connected to database.');
+  logDao('Connected to database');
 });
 
 
-
 function addCard(userInput) {
-  connection.query(`INSERT INTO ${DB_NAME} SET ?`, userInput, (err, results, fields) => {
+  let query = connection.query(`INSERT INTO ${DB_NAME} SET ?`, userInput, (err, results, fields) => {
     if(err) {
       return console.error(err);
     }
-    console.log('result: ', results);
-    console.log('fields: ', fields);
+    logDao(`result: ${JSON.stringify(results)}`);
   })
+  logDao(`QUERY ${query.sql}`);
 }
 
 /**
@@ -48,7 +55,8 @@ function getCards(userInputOption, cb) {
   connection.query(sql, (err, results, fields) => {
     if (err) throw err;
     cb(err, results, fields);
-  })
+  });
+  logDao(sql);
 }
 
 module.exports = {
