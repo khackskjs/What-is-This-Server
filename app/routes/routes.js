@@ -15,10 +15,11 @@ module.exports = function(app, db) {
   
   app.get('/card', (req, res) => {
     console.log('>>> GET', req.query);
-    mysqlDao.getCards({ userId: 'kjs' }, (err, results, fields) => {
-      console.log('results', JSON.stringify(results));
+    
+    mysqlDao.getCards(req.query, (err, results, fields) => {
+      console.log(`  results.length: ${results.length}`);
+      console.log(`  fields.length: ${fields.length}`);
       res.json(results);
     });
-    // res.send('OK');
   })
 };
