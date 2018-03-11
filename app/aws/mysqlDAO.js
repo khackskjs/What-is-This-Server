@@ -14,7 +14,7 @@ var connection = mysql.createConnection({
  * @param {String} sql 
  */
 function logDao(sql) {
-  console.log(`SQL ${sql}`);
+  console.log(`${sql}`);
 }
 
 connection.connect(function(err) {
@@ -27,12 +27,13 @@ connection.connect(function(err) {
 });
 
 
-function addCard(userInput) {
+function addCard(userInput, cb) {
   let query = connection.query(`INSERT INTO ${DB_NAME} SET ?`, userInput, (err, results, fields) => {
     if(err) {
       return console.error(err);
     }
     logDao(`result: ${JSON.stringify(results)}`);
+    cb(err, results);
   })
   logDao(`QUERY ${query.sql}`);
 }
