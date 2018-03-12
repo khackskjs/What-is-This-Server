@@ -2,7 +2,7 @@ const mysql = require('mysql'),
       CARD_TBL = 'test',
       USER_TBL = 'user';
 
-const USER_ID = 'userId', USER_PW = 'userPw', USER_LAST_LOGIN_DATETIME = 'lastLoginDatetime';
+const USER_ID = 'userId', USER_PW = 'userPw', USER_LAST_LOGIN_DATETIME = 'lastLoginDatetime', USER_REVIEW_DAY_COUNT = 'reviewDayCount';
 
 var connection = mysql.createConnection({
   host     : 'awsdatabase.coygvosyq5mp.ap-northeast-2.rds.amazonaws.com', //process.env.RDS_HOSTNAME,
@@ -82,15 +82,15 @@ function getLogin(userInfo, cb) {
   });
   logDao(sql);;
 }
-function updateUserLastUpdateTime(userInfo, cb) {
+function updateUserLoginInfo(userInfo, cb) {
   var updateResult, query,
-      sql = `UPDATE ${USER_TBL} SET ${USER_LAST_LOGIN_DATETIME} = ?`;
+      sql = `UPDATE ${USER_TBL} SET ${USER_LAST_LOGIN_DATETIME} = ?, ${USER_REVIEW_DAY_COUNT} = ?`;
 
-  query = connection.query(sql, [userInfo.lastLoginDatetime], function (err, results, fields) {
+  query = connection.query(sql, [userInfo.lastLoginDatetime, userInfo.reviewDayCount], function (err, results, fields) {
     if (err) throw err;
     cb(err, results);
   });
-  logDao(sql)
+  logDao(query.sql)
 }
 
 function extractObjectToArray(array, object) {
@@ -102,5 +102,5 @@ function extractObjectToArray(array, object) {
   return array;
 }
 module.exports = {
-  addCard, getCards, getLogin, updateUserLastUpdateTime
+  addCard, getCards, getLogin, updateUserLoginInfo
 }
