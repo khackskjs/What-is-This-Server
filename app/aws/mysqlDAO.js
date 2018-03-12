@@ -1,5 +1,8 @@
 const mysql = require('mysql'),
-      DB_NAME = 'test';
+      CARD_TBL = 'test',
+      USER_TBL = 'user';
+
+const USER_ID = 'userId', USER_PW = 'userPw', USER_LAST_LOGIN_DATETIME = 'lastLoginDatetime';
 
 var connection = mysql.createConnection({
   host     : 'awsdatabase.coygvosyq5mp.ap-northeast-2.rds.amazonaws.com', //process.env.RDS_HOSTNAME,
@@ -28,14 +31,14 @@ connection.connect(function(err) {
 
 
 function addCard(userInput, cb) {
-  let query = connection.query(`INSERT INTO ${DB_NAME} SET ?`, userInput, (err, results, fields) => {
+  let query = connection.query(`INSERT INTO ${CARD_TBL} SET ?`, userInput, (err, results, fields) => {
     if(err) {
       return console.error(err);
     }
     logDao(`result: ${JSON.stringify(results)}`);
     cb(err, results);
   })
-  logDao(`QUERY ${query.sql}`);
+  logDao(query.sql);
 }
 
 /**
@@ -45,7 +48,7 @@ function addCard(userInput, cb) {
  */
 function getCards(userInputOption, cb) {
   var sql = "SELECT * FROM ?? WHERE ?? = ?",
-      options = [DB_NAME];
+      options = [CARD_TBL];
 
   for (var prop in userInputOption) {
     options.push(prop);
@@ -60,6 +63,44 @@ function getCards(userInputOption, cb) {
   logDao(sql);
 }
 
+/**
+ *  id, pw 로만 이루어진 object 를 통해 login을 시도.
+ * @param {UserInformation} userInfo 
+ * @param {String}          userInfo.userId
+ * @param {String}          userInfo.userPw
+ */
+function getLogin(userInfo, cb) {
+  var loginResult,
+      sql = "SELECT * FROM ?? WHERE ?? = ? and ?? = ?",
+      options = [USER_TBL, USER_ID, userInfo[USER_ID], USER_PW, userInfo[USER_PW]];
+  
+  sql = mysql.format(sql, options);
+
+  connection.query(sql, (err, results, fields) => {
+    if (err) throw err;
+    cb(err, results, fields);
+  });
+  logDao(sql);;
+}
+function updateUserLastUpdateTime(userInfo, cb) {
+  var updateResult, query,
+      sql = `UPDATE ${USER_TBL} SET ${USER_LAST_LOGIN_DATETIME} = ?`;
+
+  query = connection.query(sql, [userInfo.lastLoginDatetime], function (err, results, fields) {
+    if (err) throw err;
+    cb(err, results);
+  });
+  logDao(sql)
+}
+
+function extractObjectToArray(array, object) {
+  for(let prop in object) {
+    array.push(prop);
+    array.push(object[prop]);
+  }
+  
+  return array;
+}
 module.exports = {
-  addCard, getCards
+  addCard, getCards, getLogin, updateUserLastUpdateTime
 }
