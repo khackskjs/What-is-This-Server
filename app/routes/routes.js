@@ -29,7 +29,7 @@ module.exports = function(app, db) {
       
       if (results.length === 1 && results[0].userId === userInfoReq.userId) {
         var returnUserInfo = renewLoginUserInfo(results[0], userInfoReq);
-        
+        console.log(returnUserInfo);
         // 학습 일자 변경됐을 경우, 반영하기 위함
         userInfoReq.reviewDayCount = returnUserInfo.reviewDayCount;
 
@@ -66,7 +66,9 @@ function renewLoginUserInfo(userInfoDB, userInfoReq) {
   delete userInfo.userPw;
 
   // 최종 로그인한 시간을 기준으로, reviewDayCount를 증가 시킬지 계산해야.
-  dateDB.reviewDayCount = dayDB === dayReq ? dateDB.reviewDayCount : dateDB.reviewDayCount + 1;
+  console.log('1', dayDB === dayReq, dayDB, dayReq, dateDB.reviewDayCount);
+  console.log(userInfo);
+  userInfo.reviewDayCount = dayDB === dayReq ? userInfo.reviewDayCount : userInfo.reviewDayCount + 1;
 
   return userInfo;
 }
