@@ -110,8 +110,12 @@ function updateUserLoginInfo(userInfo, cb) {
 }
 /**
  *  reviewResult를 바탕으로 리뷰 결과를 업데이트 하기 위함
+ * 
+ *  @example  for pass card
+ *      INSERT INTO test (id,reviewResult,nextReviewDayCount,cardLevel) VALUES (5,-1,2,2),(6,-1,2,2) 
+ *      ON DUPLICATE KEY UPDATE id=VALUES(id),reviewResult=VALUES(reviewResult),nextReviewDayCount=VALUES(nextReviewDayCount),cardLevel=VALUES(cardLevel)
  */
-function updateCardReviewResult(cards) {
+function updateCardReviewResult(cards, cb) {
   if(!Array.isArray(cards) || cards.length === 0) {
     return;
   }
@@ -124,21 +128,22 @@ function updateCardReviewResult(cards) {
   keyUpdateFields = _.map(fieldNameArray, field => `${field}=VALUES(${field})`);
   sql = `INSERT INTO ${CARD_TBL} (${fieldNamesSql}) VALUES (${passValueArray.join('),(')}) ON DUPLICATE KEY UPDATE ${keyUpdateFields.join(',')}`;
 
-  // INSERT INTO table (id,Col1,Col2) VALUES (1,1,1),(2,2,3),(3,9,3),(4,10,12) ON DUPLICATE KEY UPDATE Col1=VALUES(Col1),Col2=VALUES(Col2);
-  
-  console.log('------\n%s\n------', sql);
+  connection.query(sql, (err, results) => {
+    cb(err, results);
+  })
+  logDao(sql);
 }
 /**
  *  card review 결과를 업데이트 하기 위함
  * @param {Object} options
  * @param {string} options.userId - user 가 요청 할 경우, 해당 ID 만 업데이트 함
- * @param {number} options.reviewResult - pass: 0, none: -1, pass: 양수
+ * @param {number} options.reviewResult - fail: 0, none: -1, pass: 1
  * @param {function} cb 
  */
 function getCardsForUpdate(options, cb) {
   var refRR = options.reviewResult,
-      sqlRevRes = refRR === 0 ? `= 0` : refRR > 0 ? `> 0` : '= -1',
-      sql = `SELECT id, cardLevel, nextReviewDayCount, reviewDates, referenceDayCount, reviewResult FROM test WHERE reviewResult ${sqlRevRes}`;
+      // sqlRevRes = refRR === 0 ? `= 0` : refRR > 0 ? `> 0` : '= -1',
+      sql = `SELECT id, cardLevel, nextReviewDayCount, reviewDates, referenceDayCount, reviewResult FROM test WHERE reviewResult = ${options.reviewResult}`;
 
   if(options.userId) sql += ` and userId = ${options.userId}`;
 

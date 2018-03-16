@@ -33,7 +33,9 @@ module.exports = function(app, db) {
   });
 
   app.post('/card/update', (req, res) => {
-    cardService.updateReviewResult(req.body);
+    cardService.updateReviewResult(req.body, (err, result) => {
+      console.log(result);
+    });
   });
   
   app.post('/user/login', (req, res) => {    

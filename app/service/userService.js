@@ -12,10 +12,14 @@ function login(userInfoReq, res) {
     
     // 학습 일자 변경됐을 경우, user 정보 update 및, card.reviewResult update
     if (results[0].reviewDayCount !== returnUserInfo.reviewDayCount) {
-      userInfoReq.reviewDayCount = returnUserInfo.reviewDayCount;
-      cardService.updateReviewResult(returnUserInfo);
+      cardService.updateReviewResult(returnUserInfo, (err, result) => {
+        var text = `update card review result`
+        if(err) return console.error(`${text}`);
+        console.log(`${text} result:`, result);
+      });
     }
     
+    userInfoReq.reviewDayCount = returnUserInfo.reviewDayCount;
     // 최종 로그인 시간 업데이트
     mysqlDao.updateUserLoginInfo(userInfoReq, (err, results) => {
       if (err) console.error(new Error());
