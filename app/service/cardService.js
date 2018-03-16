@@ -27,20 +27,20 @@ function updateReviewResult(userInfo, cb) {
       });
       // fail 처리
       failCardUpdated = _.map(results[1], card => {
-        console.log(userInfo.reviewDayCount, card);
         return { id: card.id, reviewResult: -1, nextReviewDayCount: userInfo.reviewDayCount, referenceDayCount: userInfo.reviewDayCount, cardLevel: 1 };
       });
 
       console.log(`pass cards[${passCardsUpdated.length}] fail cards[${failCardUpdated.length}]`)
       async.parallel(
         [
-          callback => mysqlDao.updateCardReviewResult(passCardsUpdated, cb, callback),
-          callback => mysqlDao.updateCardReviewResult(failCardUpdated, cb, callback)
-        ]
-      ),
-      (err, results) => {
-        cb(err, results);
-      }
+          callback => mysqlDao.updateCardReviewResult(failCardUpdated, callback),
+          callback => mysqlDao.updateCardReviewResult(passCardsUpdated, callback)
+        ],
+        (err, results) => {
+          console.log('done')
+          cb(err, results);
+        }
+      )
     }
   );
 }

@@ -116,8 +116,10 @@ function updateUserLoginInfo(userInfo, cb) {
  *      ON DUPLICATE KEY UPDATE id=VALUES(id),reviewResult=VALUES(reviewResult),nextReviewDayCount=VALUES(nextReviewDayCount),cardLevel=VALUES(cardLevel)
  */
 function updateCardReviewResult(cards, cb) {
+  console.log('_updateCardReviewResult c.len', cards.length)
   if(!Array.isArray(cards) || cards.length === 0) {
-    return;
+    console.log('it is null')
+    return cb(null, 'wrong');
   }
   var sql, fieldNameArray, fieldNameArrayWithoutId, fieldNamesSql, passValueArray, keyUpdateFields;
   

@@ -5,7 +5,7 @@ var mysqlDao = require('../aws/mysqlDAO'),
 module.exports = function(app, db) {
   app.use('/', (req, res, next) => {
     let m = req.method;
-    console.log(`>>> ${m} ${req.path}`, m === 'GET' ? req.query : req.body);
+    console.log(`\n>>> ${m} ${req.path}`, m === 'GET' ? req.query : req.body);
     next();
   });
 
@@ -28,13 +28,13 @@ module.exports = function(app, db) {
     })
   })
 
-  app.get('/card/update', (req, res) => {
-    res.json('OK');
-  });
-
   app.post('/card/update', (req, res) => {
     cardService.updateReviewResult(req.body, (err, result) => {
-      console.log(result);
+      if(err) {
+        console.error(`${req.method} ${req.path} fail`);
+        return res.json('fail');
+      }
+      return res.json({ result: 'success' });
     });
   });
   
