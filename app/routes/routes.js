@@ -1,6 +1,7 @@
 var mysqlDao = require('../aws/mysqlDAO'),
     cardService = require('../service/cardService'),
-    userService = require('../service/userService');
+    userService = require('../service/userService'),
+    oauthService = require('../service/oauthService');
 
 module.exports = function(app, db) {
   app.use('/', (req, res, next) => {
@@ -43,5 +44,11 @@ module.exports = function(app, db) {
     userInfoReq.lastLoginDatetime = userInfoReq.lastLoginDatetime || new Date(userInfoReq.lastLoginDatetime);
     
     userService.login(userInfoReq, res);
+  });
+
+  app.post('/oauth/login', (req, res) => {
+    var oauthInfoReq = req.body;
+    oauthInfoReq.lastLoginDatetime = new Date();
+    oauthService.login(oauthInfoReq, res);
   });
 };

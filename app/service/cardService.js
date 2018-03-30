@@ -46,7 +46,53 @@ function updateReviewResult(userInfo, cb) {
 }
 
 
+async function updateReviewResultOauth(oauthInfo, cb) {
+  return new Promise((resolve, reject) => {
+    if (!oauthInfo || !oauthInfo.email || !oauthInfo.reviewDayCount) {
+      console.log('updateReviewResultOauth] wrong parameter');
+      return reject('wrong parameter');
+    }
+
+    async.parallel(
+      [
+        callback => mysqlDao.getCardsForUpdate({ reviewResult: 1 }, callback),  // passCards
+        callback => mysqlDao.getCardsForUpdate({ reviewResult: 0 }, callback)   // failCards
+      ],
+      async (err, results) => {
+        if (err) return reject(err);
+        // pass card 처리
+        const passCardsUpdated = _.map(results[0], card => {
+          const cardLevel = card.cardLevel;
+          const reviewDates = card.reviewDates.split(',').map(val => Number(val));  // string -> number[]
+          const nRDC = card.referenceDayCount + reviewDates[cardLevel] - 1;
+          return { id: card.id, reviewResult: -1, nextReviewDayCount: nRDC, cardLevel: cardLevel + 1 };
+        });
+
+        // fail card 처리
+        const failCardUpdated = _.map(results[1], card => {
+          return { id: card.id, reviewResult: -1, nextReviewDayCount: oauthInfo.reviewDayCount, referenceDayCount: oauthInfo.reviewDayCount, cardLevel: 1 };
+        });
+  
+        try {
+          const [passCardUpdateResult, failCardUpdateResult] = await Promise.all([mysqlDao.updateCardReviewResult(failCardUpdated), mysqlDao.updateCardReviewResult(passCardsUpdated)]);
+          const affectedCards = (passCardUpdateResult.affectedRows + failCardUpdateResult.affectedRows)/2;
+          if (affectedCards) {
+            console.log(`${affectedCards} Cards updated`);
+          }
+          resolve (results);
+        }
+        catch(err) {
+          console.error('updateReviewResultOauth] err', err);
+          return reject(err);
+        }  
+      }
+    );
+  })
+}
+
+
 
 module.exports = {
-  updateReviewResult
+  updateReviewResult,
+  updateReviewResultOauth
 }

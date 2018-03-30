@@ -1,10 +1,13 @@
 const mysql = require('mysql'),
       _ = require('underscore'),
       CARD_TBL = 'test',
-      USER_TBL = 'user';
+      USER_TBL = 'user',
+      OAUTH_TBL = 'oAuth';
 
 const USER_ID = 'userId', USER_PW = 'userPw', USER_LAST_LOGIN_DATETIME = 'lastLoginDatetime', USER_REVIEW_DAY_COUNT = 'reviewDayCount',
-      CARD_NEXT_REVIEW_DAY_COUNT = 'nextReviewDayCount', CARD_REVIEW_RESULT = 'reviewResult';
+      CARD_NEXT_REVIEW_DAY_COUNT = 'nextReviewDayCount', CARD_REVIEW_RESULT = 'reviewResult',
+      OAUTH_G_NAME = 'givenName', OAUTH_F_NAME = 'familyName', OAUTH_MAIL = 'email', OAUTH_LAST_LOGIN_DATETIME = 'lastLoginDatetime', OAUTH_REVIEW_DAY_COUNT = 'reviewDayCount'
+      ;
 
 var connection = mysql.createConnection({
   host     : 'awsdatabase.coygvosyq5mp.ap-northeast-2.rds.amazonaws.com', //process.env.RDS_HOSTNAME,
@@ -109,6 +112,47 @@ function updateUserLoginInfo(userInfo, cb) {
   logDao(query.sql)
 }
 /**
+ *  email 만 이용해서 user 정보 가져 올 것.
+ * @param {Object} oauthInfo 
+ * @param {string} oauthInfo.email
+ */
+async function getOauth(oauthInfo) {
+  var loginResult,
+      sql = `SELECT * FROM ?? WHERE ?? = ?`,
+      options = [OAUTH_TBL, OAUTH_MAIL, oauthInfo[OAUTH_MAIL]];
+
+  sql = mysql.format(sql, options);
+
+  return new Promise((resolve, reject) => {
+    connection.query(sql, (err, results, fields) => {
+      if(err) return reject(err);
+      return resolve(results);
+    })
+    logDao(sql);
+  });
+}
+
+function insertOauth(oauthInfo) {
+  return new Promise((resolve, reject) => {
+    let query = connection.query(`INSERT INTO ${OAUTH_TBL} SET ?`, oauthInfo, (err, results) => {
+      if(err) return reject(err);
+      return resolve(results);
+    });
+    logDao(query.sql);
+  })
+}
+function updateOauthLoginInfo(oauth) {
+  return new Promise((resolve, reject) => {
+    const sql = `UPDATE ${OAUTH_TBL} SET ${OAUTH_LAST_LOGIN_DATETIME} = ?, ${OAUTH_REVIEW_DAY_COUNT} = ?`;
+    const query = connection.query(sql, [oauth.lastLoginDatetime, oauth.reviewDayCount], (err, results, fields) => {
+      if (err) return reject(err);
+      return resolve(results);
+    });
+   logDao(query.sql)
+  });
+}
+
+/**
  *  reviewResult를 바탕으로 리뷰 결과를 업데이트 하기 위함
  * 
  *  @example  for pass card
@@ -116,24 +160,26 @@ function updateUserLoginInfo(userInfo, cb) {
  *      ON DUPLICATE KEY UPDATE id=VALUES(id),reviewResult=VALUES(reviewResult),nextReviewDayCount=VALUES(nextReviewDayCount),cardLevel=VALUES(cardLevel)
  */
 function updateCardReviewResult(cards, cb) {
-  console.log('_updateCardReviewResult c.len', cards.length)
-  if(!Array.isArray(cards) || cards.length === 0) {
-    console.log('it is null')
-    return cb(null, 'wrong');
-  }
-  var sql, fieldNameArray, fieldNameArrayWithoutId, fieldNamesSql, passValueArray, keyUpdateFields;
-  
-  fieldNameArray = Object.keys(cards[0]);
-  fieldNamesSql = fieldNameArray.join(',');
-  passValueArray = _.map(cards, card => Object.values(card).join(','));
-  fieldNameArrayWithoutId = _.without(fieldNameArrayWithoutId, 'id');
-  keyUpdateFields = _.map(fieldNameArray, field => `${field}=VALUES(${field})`);
-  sql = `INSERT INTO ${CARD_TBL} (${fieldNamesSql}) VALUES (${passValueArray.join('),(')}) ON DUPLICATE KEY UPDATE ${keyUpdateFields.join(',')}`;
+  return new Promise((resolve, reject) => {
+    if(!Array.isArray(cards)) {
+      return reject(`wrong parameter`);
+    }
+    else if (cards.length === 0) {
+      return resolve({ affectedRows: 0 });
+    }
 
-  connection.query(sql, (err, results) => {
-    cb(err, results);
-  })
-  logDao(sql);
+    const fieldNameArray = Object.keys(cards[0]);
+    const fieldNamesSql = fieldNameArray.join(',');
+    const passValueArray = _.map(cards, card => Object.values(card).join(','));
+    const keyUpdateFields = _.map(fieldNameArray, field => `${field}=VALUES(${field})`);
+    const sql = `INSERT INTO ${CARD_TBL} (${fieldNamesSql}) VALUES (${passValueArray.join('),(')}) ON DUPLICATE KEY UPDATE ${keyUpdateFields.join(',')}`;
+  
+    connection.query(sql, (err, results) => {
+      if (err) return reject(err);
+      return resolve(results);
+    })
+    logDao(sql);
+  });
 }
 /**
  *  card review 결과를 업데이트 하기 위함
@@ -157,5 +203,7 @@ function getCardsForUpdate(options, cb) {
 }
 
 module.exports = {
-  addCard, getCards, updateCard, getLogin, updateUserLoginInfo, updateCardReviewResult, getCardsForUpdate
+  addCard, getCards, updateCard, updateCardReviewResult, getCardsForUpdate,
+  getLogin, updateUserLoginInfo,
+  getOauth, insertOauth, updateOauthLoginInfo
 }
