@@ -47,22 +47,25 @@ function addCard(userInput, cb) {
 }
 
 /**
+ *  요청한 복습 일자에 해당하는 user의 카드를 반환.
+ * card.nextReviewDayCount <= user.reviewDayCount 일 경우.
  * 
  * @param {Object} uio - UserInput Option 중 WHERE 에 사용하고 싶은 멤버만 파라미터로 전달
  * @param {String} uio.userId
  * @param {Number} uio.reviewDayCount
  */
-function getCards(uio, cb) {
-  // card.nextReviewDayCount <= user.reviewDayCount 일 경우, 복습할 날짜가 된 카드만 읽음
-  var sql = `SELECT * FROM ?? WHERE ?? = ? and ?? <= ?`,
-      options = [CARD_TBL, USER_ID, uio[USER_ID], CARD_NEXT_REVIEW_DAY_COUNT, uio[USER_REVIEW_DAY_COUNT]];
-
-  sql = mysql.format(sql, options);
-  connection.query(sql, (err, results, fields) => {
-    if (err) throw err;
-    cb(err, results, fields);
+function getCards(uio) {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT * FROM ?? WHERE ?? = ? and ?? <= ?`
+    const options = [CARD_TBL, USER_ID, uio[USER_ID], CARD_NEXT_REVIEW_DAY_COUNT, uio[USER_REVIEW_DAY_COUNT]];
+    const query = mysql.format(sql, options);
+    
+    connection.query(query, (err, results, fields) => {
+      if (err) return reject(err);
+      return resolve(results);
+    });
+    logDao(query);
   });
-  logDao(sql);
 }
 /**
  * 

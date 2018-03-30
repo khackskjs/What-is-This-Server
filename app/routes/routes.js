@@ -16,11 +16,15 @@ module.exports = function(app, db) {
     });
   })
   
-  app.get('/card', (req, res) => {
-    mysqlDao.getCards(req.query, (err, results, fields) => {
-      console.log(`  results.length: ${results.length}`);
-      res.json(results);
-    });
+  app.get('/card', async (req, res) => {
+    try {
+      const cards = await mysqlDao.getCards(req.query);
+      console.log(`  results.length: ${cards.length}`);
+      res.json(cards);
+    }
+    catch(err) {
+      console.error(`GET /card err`, err);
+    }
   });
 
   app.put('/card', (req, res) => {
