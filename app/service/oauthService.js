@@ -36,16 +36,17 @@ async function proceedOauthLogin(oauthReq, oauthDB, res) {
       res.json( new Error(`Failed to update previous reviewed cards`));
     }
   }
-
-  try {
-    // 최종 로그인 시간 업데이트
-    await mysqlDao.updateOauthLoginInfo(returnOauthInfo);
-    console.log(`OAUTH [${returnOauthInfo.email}] lastLoginDatetime[${returnOauthInfo.lastLoginDatetime}] is updated`);
-    res.json(returnOauthInfo);
-  }
-  catch(err) {
-    console.error(`Failed to update current oauth login information`, err);
-    res.json(err);
+  else {
+    try {
+      // 최종 로그인 시간 업데이트
+      await mysqlDao.updateOauthLoginInfo(returnOauthInfo);
+      console.log(`OAUTH [${returnOauthInfo.email}] lastLoginDatetime[${returnOauthInfo.lastLoginDatetime}] is updated`);
+      res.json(returnOauthInfo);
+    }
+    catch(err) {
+      console.error(`Failed to update current oauth login information`, err);
+      res.json(err);
+    }
   }
 }
 /**
