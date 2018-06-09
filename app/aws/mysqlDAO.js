@@ -57,7 +57,7 @@ function addCard(userInput, cb) {
 function getCards(uio) {
   return new Promise((resolve, reject) => {
     const sql = `SELECT * FROM ?? WHERE ?? = ? and ?? <= ?`
-    const options = [CARD_TBL, USER_ID, uio[USER_ID], CARD_NEXT_REVIEW_DAY_COUNT, uio[USER_REVIEW_DAY_COUNT]];
+    const options = [CARD_TBL, USER_ID, mysql.escape(uio[USER_ID]), CARD_NEXT_REVIEW_DAY_COUNT, mysql.escape(uio[USER_REVIEW_DAY_COUNT])];
     const query = mysql.format(sql, options);
     
     connection.query(query, (err, results, fields) => {
@@ -78,7 +78,7 @@ function updateCard(cardInfo, cb) {
   var updateResult, query,
       sql = `UPDATE ${CARD_TBL} SET ${CARD_REVIEW_RESULT} = ? WHERE id = ?`;
 
-  query = connection.query(sql, [cardInfo.reviewResult, cardInfo.id], (err, result) => {
+  query = connection.query(sql, [cardInfo.reviewResult, mysql.escape(cardInfo.id)], (err, result) => {
     if (err) throw err;
     cb(err, result);
   });
@@ -94,7 +94,7 @@ function updateCard(cardInfo, cb) {
 function getLogin(userInfo, cb) {
   var loginResult,
       sql = "SELECT * FROM ?? WHERE ?? = ? and ?? = ?",
-      options = [USER_TBL, USER_ID, userInfo[USER_ID], USER_PW, userInfo[USER_PW]];
+      options = [USER_TBL, USER_ID, mysql.escape(userInfo[USER_ID]), USER_PW, mysql.escape(userInfo[USER_PW])];
   
   sql = mysql.format(sql, options);
 
@@ -122,7 +122,7 @@ function updateUserLoginInfo(userInfo, cb) {
 async function getOauth(oauthInfo) {
   var loginResult,
       sql = `SELECT * FROM ?? WHERE ?? = ?`,
-      options = [OAUTH_TBL, OAUTH_MAIL, oauthInfo[OAUTH_MAIL]];
+      options = [OAUTH_TBL, OAUTH_MAIL, mysql.escape(oauthInfo[OAUTH_MAIL])];
 
   sql = mysql.format(sql, options);
 
@@ -194,7 +194,7 @@ function updateCardReviewResult(cards, cb) {
 function getCardsForUpdate(options, cb) {
   var refRR = options.reviewResult,
       // sqlRevRes = refRR === 0 ? `= 0` : refRR > 0 ? `> 0` : '= -1',
-      sql = `SELECT id, cardLevel, nextReviewDayCount, reviewDates, referenceDayCount, reviewResult FROM test WHERE reviewResult = ${options.reviewResult}`;
+      sql = `SELECT id, cardLevel, nextReviewDayCount, reviewDates, referenceDayCount, reviewResult FROM test WHERE reviewResult = ${mysql.escape(options.reviewResult)}`;
 
   if(options.userId) sql += ` and userId = ${options.userId}`;
 
