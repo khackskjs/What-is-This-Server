@@ -1,0 +1,17 @@
+{
+    "USER": {
+      "TABLE_NAME": "user",
+      "ID": "userId",
+      "PW": "userPw",
+      "LAST_LOGIN_DATETIME": "lastLoginDatetime",
+      "REVIEW_DAY_COUNT": "reviewDayCount"
+    },
+    "OAUTH": {
+      "TABLE_NAME": "oAuth",
+      "GIVEN_NAME": "givenName",
+      "FAMILY_NAME": "familyName",
+      "EMAIL": "email",
+      "LAST_LOGIN_DATETIME": "lastLoginDatetime",
+      "REVIEW_DAY_COUNT": "reviewDayCount"
+    }
+}

@@ -1,10 +1,11 @@
-var mysqlDao      = require('../aws/mysqlDAO'),
-    cardService   = require('../service/cardService');
+const mysqlDao      = require('../db/oauth.sql'),//require('../aws/mysqlDAO'),
+      pool = require('../db/pool'),
+      cardService   = require('../service/cardService');
 
 async function login(oauthInfoReq, res) {
   try {
     const loginResult = await mysqlDao.getOauth(oauthInfoReq);
-
+    
     // 최초 로그인 일 경우 등록 후 reviewDayCount = 1 리턴하고, 
     if (loginResult.length === 0) {
       return proceedRegisterOauth(oauthInfoReq, res);
@@ -28,7 +29,7 @@ async function proceedOauthLogin(oauthReq, oauthDB, res) {
     try {
       await cardService.updateReviewResultOauth(returnOauthInfo);
       console.log('response: oauth', returnOauthInfo);
-      res.json(returnOauthInfo);
+      // res.json(returnOauthInfo);
     }
     catch(err) {
       console.error('oauthService:login:updateReviewResultOauth:CB] err', err);
@@ -36,18 +37,18 @@ async function proceedOauthLogin(oauthReq, oauthDB, res) {
       res.json( new Error(`Failed to update previous reviewed cards`));
     }
   }
-  else {
-    try {
-      // 최종 로그인 시간 업데이트
-      await mysqlDao.updateOauthLoginInfo(returnOauthInfo);
-      console.log(`OAUTH [${returnOauthInfo.email}] lastLoginDatetime[${returnOauthInfo.lastLoginDatetime}] is updated`);
-      res.json(returnOauthInfo);
-    }
-    catch(err) {
-      console.error(`Failed to update current oauth login information`, err);
-      res.json(err);
-    }
+  
+  try {
+    // 최종 로그인 시간 업데이트
+    await mysqlDao.updateOauthLoginInfo(returnOauthInfo);
+    console.log(`OAUTH [${returnOauthInfo.email}] lastLoginDatetime[${returnOauthInfo.lastLoginDatetime}] is updated`);
+    res.json(returnOauthInfo);
   }
+  catch(err) {
+    console.error(`Failed to update current oauth login information`, err);
+    res.json(err);
+  }
+
 }
 /**
  *  oauth user 를 추가함

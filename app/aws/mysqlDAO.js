@@ -9,12 +9,14 @@ const USER_ID = 'userId', USER_PW = 'userPw', USER_LAST_LOGIN_DATETIME = 'lastLo
       OAUTH_G_NAME = 'givenName', OAUTH_F_NAME = 'familyName', OAUTH_MAIL = 'email', OAUTH_LAST_LOGIN_DATETIME = 'lastLoginDatetime', OAUTH_REVIEW_DAY_COUNT = 'reviewDayCount'
       ;
 
+const DB_CONFIG = require('../config.json');
+
 var connection = mysql.createConnection({
-  host     : 'awsdatabase.coygvosyq5mp.ap-northeast-2.rds.amazonaws.com', //process.env.RDS_HOSTNAME,
-  database : 'what_is_that',
-  user     : 'admin',//process.env.RDS_USERNAME,
-  password : 'tjddktkfkdgo',//process.env.RDS_PASSWORD,
-  port     : 3306//process.env.RDS_PORT
+  host     : DB_CONFIG.database.host, //process.env.RDS_HOSTNAME,
+  database : DB_CONFIG.database.database,
+  user     : DB_CONFIG.database.user,//process.env.RDS_USERNAME,
+  password : DB_CONFIG.database.password,//process.env.RDS_PASSWORD,
+  port     : DB_CONFIG.database.port//process.env.RDS_PORT
 });
 
 /**
@@ -57,7 +59,7 @@ function addCard(userInput, cb) {
 function getCards(uio) {
   return new Promise((resolve, reject) => {
     const sql = `SELECT * FROM ?? WHERE ?? = ? and ?? <= ?`
-    const options = [CARD_TBL, USER_ID, mysql.escape(uio[USER_ID]), CARD_NEXT_REVIEW_DAY_COUNT, mysql.escape(uio[USER_REVIEW_DAY_COUNT])];
+    const options = [CARD_TBL, USER_ID, uio[USER_ID], CARD_NEXT_REVIEW_DAY_COUNT, uio[USER_REVIEW_DAY_COUNT]];
     const query = mysql.format(sql, options);
     
     connection.query(query, (err, results, fields) => {
@@ -94,7 +96,7 @@ function updateCard(cardInfo, cb) {
 function getLogin(userInfo, cb) {
   var loginResult,
       sql = "SELECT * FROM ?? WHERE ?? = ? and ?? = ?",
-      options = [USER_TBL, USER_ID, mysql.escape(userInfo[USER_ID]), USER_PW, mysql.escape(userInfo[USER_PW])];
+      options = [USER_TBL, USER_ID, userInfo[USER_ID], USER_PW, userInfo[USER_PW]];
   
   sql = mysql.format(sql, options);
 
@@ -113,46 +115,6 @@ function updateUserLoginInfo(userInfo, cb) {
     cb(err, results);
   });
   logDao(query.sql)
-}
-/**
- *  email 만 이용해서 user 정보 가져 올 것.
- * @param {Object} oauthInfo 
- * @param {string} oauthInfo.email
- */
-async function getOauth(oauthInfo) {
-  var loginResult,
-      sql = `SELECT * FROM ?? WHERE ?? = ?`,
-      options = [OAUTH_TBL, OAUTH_MAIL, mysql.escape(oauthInfo[OAUTH_MAIL])];
-
-  sql = mysql.format(sql, options);
-
-  return new Promise((resolve, reject) => {
-    connection.query(sql, (err, results, fields) => {
-      if(err) return reject(err);
-      return resolve(results);
-    })
-    logDao(sql);
-  });
-}
-
-function insertOauth(oauthInfo) {
-  return new Promise((resolve, reject) => {
-    let query = connection.query(`INSERT INTO ${OAUTH_TBL} SET ?`, oauthInfo, (err, results) => {
-      if(err) return reject(err);
-      return resolve(results);
-    });
-    logDao(query.sql);
-  })
-}
-function updateOauthLoginInfo(oauth) {
-  return new Promise((resolve, reject) => {
-    const sql = `UPDATE ${OAUTH_TBL} SET ${OAUTH_LAST_LOGIN_DATETIME} = ?, ${OAUTH_REVIEW_DAY_COUNT} = ?`;
-    const query = connection.query(sql, [oauth.lastLoginDatetime, oauth.reviewDayCount], (err, results, fields) => {
-      if (err) return reject(err);
-      return resolve(results);
-    });
-   logDao(query.sql)
-  });
 }
 
 /**
@@ -208,5 +170,5 @@ function getCardsForUpdate(options, cb) {
 module.exports = {
   addCard, getCards, updateCard, updateCardReviewResult, getCardsForUpdate,
   getLogin, updateUserLoginInfo,
-  getOauth, insertOauth, updateOauthLoginInfo
+  // getOauth, insertOauth, updateOauthLoginInfo
 }
