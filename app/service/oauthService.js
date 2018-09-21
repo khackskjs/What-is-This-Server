@@ -73,8 +73,8 @@ async function proceedRegisterOauth(oauthInfo) {
  */
 function renewLoginUserInfo(oauthInfoDB, oauthInfoReq) {
   const oauthInfo = JSON.parse(JSON.stringify(oauthInfoDB));
-  const dayDB = new Date(oauthInfo.lastLoginDatetime || Date.now()).getDate();
-  const dayReq = new Date(oauthInfoReq.lastLoginDatetime || Date.now()).getDate();
+  const dayDB = new Date(oauthInfo.lastLoginDatetime || Date.now()).getUTCDate();
+  const dayReq = new Date(oauthInfoReq.lastLoginDatetime || Date.now()).getUTCDate();
   
   // login 성공하면, 필요없는 부분은 제거하고 user에 전달 예정
   delete oauthInfo.id;
