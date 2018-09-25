@@ -11,13 +11,8 @@ const USER_ID = 'userId', USER_PW = 'userPw', USER_LAST_LOGIN_DATETIME = 'lastLo
 
 const DB_CONFIG = require('../config.json');
 
-var connection = mysql.createConnection({
-  host     : DB_CONFIG.database.host, //process.env.RDS_HOSTNAME,
-  database : DB_CONFIG.database.database,
-  user     : DB_CONFIG.database.user,//process.env.RDS_USERNAME,
-  password : DB_CONFIG.database.password,//process.env.RDS_PASSWORD,
-  port     : DB_CONFIG.database.port//process.env.RDS_PORT
-});
+var connection;
+
 
 /**
  * 
@@ -27,15 +22,34 @@ function logDao(sql) {
   console.log(`${sql};`);
 }
 
-connection.connect(function(err) {
-  if (err) {
-    console.error('Database connection failed: ' + err.stack);
-    return;
-  }
+function handleDisconnect() {
+  connection = mysql.createConnection({
+    host     : DB_CONFIG.database.host, //process.env.RDS_HOSTNAME,
+    database : DB_CONFIG.database.database,
+    user     : DB_CONFIG.database.user,//process.env.RDS_USERNAME,
+    password : DB_CONFIG.database.password,//process.env.RDS_PASSWORD,
+    port     : DB_CONFIG.database.port//process.env.RDS_PORT
+  });
   
-  logDao('Connected to database');
-});
+  connection.connect(function(err) {
+    if (err) {
+      console.error('Database connection failed: ' + err.stack);
+      return setTimeout(handleDisconnect, 2000);
+    }
+    
+    logDao(`Connected to database ${new Date().toJSON()}`);
+  });
 
+  connection.on('error', function(err) {
+    console.log('db error', err);
+    if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
+      handleDisconnect();                         // lost due to either server restart, or a
+    } else {                                      // connnection idle timeout (the wait_timeout
+      throw err;                                  // server variable configures this)
+    }
+  });
+}
+handleDisconnect();
 
 function addCard(userInput, cb) {
   let query = connection.query(`INSERT INTO ${CARD_TBL} SET ?`, userInput, (err, results, fields) => {
