@@ -6,7 +6,7 @@ const OAUTH = require('./constant.json').OAUTH;
  * @param {String} sql 
  */
 function logDao(sql) {
-  console.log(`${sql};`);
+  logger.debug(`${sql};`);
 }
 
 /**
@@ -22,7 +22,7 @@ async function getOauth(oauthInfo) {
     return new Promise((resolve, reject) => {
       const query = dbClient.query(sql, options, (err, results, fields) => {
         if (err) {
-          console.error(`Error:getOauth err[${JSON.stringify(err)}]`);
+          logger.error(`Error:getOauth err[${JSON.stringify(err)}]`);
           return reject(err);
         }
         
@@ -35,8 +35,6 @@ async function getOauth(oauthInfo) {
   return pool.use(myTask);
 }
 
-// console.log(`before getOauth] max[${pool.max}] min[${pool.min}] size[${pool.size}] spareResourceCapacity[${pool.spareResourceCapacity}] available[${pool.available}] borrowed[${pool.borrowed}]`)
-
 async function insertOauth(oauthInfo) {
   const sql = `INSERT INTO ${OAUTH.TABLE_NAME} SET ?`;
   
@@ -44,7 +42,7 @@ async function insertOauth(oauthInfo) {
     return new Promise((resolve, reject) => {
       dbClient.query(sql, oauthInfo, (err, results) => {
         if (err) {
-          console.error(`Error:insertOauth err[${JSON.stringify(err)}]`);
+          logger.error(`Error:insertOauth err[${JSON.stringify(err)}]`);
           return reject(err);
         }
 

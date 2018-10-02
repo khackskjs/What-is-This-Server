@@ -23,7 +23,7 @@ const factory = {
   destroy: (conn) => {
     return new Promise((resolve, reject) => {
       conn.end((err) => {
-        console.log("연결 종료", err); 
+        logger.debug("연결 종료", err); 
         if(err) return reject(err);
         else return resolve();
       });
@@ -39,14 +39,14 @@ const opts = {
 const myPool = genericPool.createPool(factory, opts);
 
 process.on('exit', (code) => {
-  console.log('process.on:exit')
+  logger.debug('process.on:exit')
   myPool.drain(() => {
     myPool.destroy();
   })
 })
 
 process.on('uncaughtException', (err) => {
-  console.log("오류", err);
+  logger.debug("오류", err);
 });
 
 module.exports = myPool;

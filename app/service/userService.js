@@ -3,7 +3,7 @@ var mysqlDao      = require('../aws/mysqlDAO'),
 
 function login(userInfoReq, res) {
   mysqlDao.getLogin(userInfoReq, (err, results, fields) => {
-    if (err) console.error(new Error());
+    if (err) logger.error(new Error());
     if (results.length !== 1 || results[0].userId !== userInfoReq.userId) {
       return res.json({});
     }
@@ -14,16 +14,16 @@ function login(userInfoReq, res) {
     if (results[0].reviewDayCount !== returnUserInfo.reviewDayCount) {
       cardService.updateReviewResult(returnUserInfo, (err, result) => {
         var text = `update card review result`
-        if(err) return console.error(`${text}`);
-        console.log(`${text} result:`, result);
+        if(err) return logger.error(`${text}`);
+        logger.info(`${text} result:`, result);
       });
     }
     
     userInfoReq.reviewDayCount = returnUserInfo.reviewDayCount;
     // 최종 로그인 시간 업데이트
     mysqlDao.updateUserLoginInfo(userInfoReq, (err, results) => {
-      if (err) console.error(new Error());
-      console.log(`USER[${userInfoReq.userId}] lastLoginDatetime[${userInfoReq.lastLoginDatetime}] is updated`);
+      if (err) logger.error(new Error());
+      logger.info(`USER[${userInfoReq.userId}] lastLoginDatetime[${userInfoReq.lastLoginDatetime}] is updated`);
 
       res.json(returnUserInfo);
     });

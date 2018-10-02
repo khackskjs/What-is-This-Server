@@ -8,7 +8,7 @@ var mysqlDao = require('../aws/mysqlDAO');
  */
 function updateReviewResult(userInfo, cb) {
   if (!userInfo || !userInfo.userId || !userInfo.reviewDayCount) {
-    console.log('updateReviewResult] wrong parameter');
+    logger.warn('updateReviewResult] wrong parameter');
   }
 
   async.parallel(
@@ -30,14 +30,13 @@ function updateReviewResult(userInfo, cb) {
         return { id: card.id, reviewResult: -1, nextReviewDayCount: userInfo.reviewDayCount, referenceDayCount: userInfo.reviewDayCount, cardLevel: 1 };
       });
 
-      console.log(`pass cards[${passCardsUpdated.length}] fail cards[${failCardUpdated.length}]`)
+      logger.info(`pass cards[${passCardsUpdated.length}] fail cards[${failCardUpdated.length}]`)
       async.parallel(
         [
           callback => mysqlDao.updateCardReviewResult(failCardUpdated, callback),
           callback => mysqlDao.updateCardReviewResult(passCardsUpdated, callback)
         ],
         (err, results) => {
-          console.log('done')
           cb(err, results);
         }
       )
@@ -49,7 +48,7 @@ function updateReviewResult(userInfo, cb) {
 async function updateReviewResultOauth(oauthInfo, cb) {
   return new Promise((resolve, reject) => {
     if (!oauthInfo || !oauthInfo.email || !oauthInfo.reviewDayCount) {
-      console.log('updateReviewResultOauth] wrong parameter');
+      logger.warn('updateReviewResultOauth] wrong parameter');
       return reject('wrong parameter');
     }
 
@@ -77,12 +76,12 @@ async function updateReviewResultOauth(oauthInfo, cb) {
           const [passCardUpdateResult, failCardUpdateResult] = await Promise.all([mysqlDao.updateCardReviewResult(failCardUpdated), mysqlDao.updateCardReviewResult(passCardsUpdated)]);
           const affectedCards = (passCardUpdateResult.affectedRows + failCardUpdateResult.affectedRows)/2;
           if (affectedCards) {
-            console.log(`${affectedCards} Cards updated`);
+            logger.info(`${affectedCards} Cards updated`);
           }
           resolve (results);
         }
         catch(err) {
-          console.error('updateReviewResultOauth] err', err);
+          logger.error('updateReviewResultOauth] err', err);
           return reject(err);
         }  
       }

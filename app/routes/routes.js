@@ -3,10 +3,21 @@ var mysqlDao = require('../aws/mysqlDAO'),
     userService = require('../service/userService'),
     oauthService = require('../service/oauthService');
 
-module.exports = function(app, db) {
+module.exports = function(app) {
   app.use('/', (req, res, next) => {
     let m = req.method;
-    console.log(`\n>>> ${m} ${req.path}`, m === 'GET' ? req.query : req.body);
+    logger.debug(`\n>>> ${m} ${req.path}`, m === 'GET' ? req.query : req.body);
+    // logger.debug(req.session);
+    
+  //   if(req.session.page_views){
+  //     req.session.page_views++;
+  //     res.send("You visited this page " + req.session.page_views + " times");
+  //  } else {
+  //     req.session.page_views = 1;
+  //     res.send("Welcome to this page for the first time!");
+  //  }
+
+    
     next();
   });
 
@@ -19,11 +30,10 @@ module.exports = function(app, db) {
   app.get('/card', async (req, res) => {
     try {
       const cards = await mysqlDao.getCards(req.query);
-      console.log(`  results.length: ${cards.length}`);
       res.json(cards);
     }
     catch(err) {
-      console.error(`GET /card err`, err);
+      logger.error(`GET /card err`, err);
     }
   });
 
@@ -36,7 +46,7 @@ module.exports = function(app, db) {
   app.post('/card/update', (req, res) => {
     cardService.updateReviewResult(req.body, (err, result) => {
       if(err) {
-        console.error(`${req.method} ${req.path} fail`);
+        logger.error(`${req.method} ${req.path} fail`);
         return res.json('fail');
       }
       return res.json({ result: 'success' });

@@ -11,7 +11,7 @@ async function login(oauthInfoReq, res) {
       return proceedRegisterOauth(oauthInfoReq, res);
     }
     else if (loginResult.length !== 1 || loginResult[0].email !== oauthInfoReq.email) {
-      console.error('oauthService:login] user login result is wrong', loginResult);
+      logger.error('oauthService:login] user login result is wrong', loginResult);
       return res.json({});
     }
     else {
@@ -19,7 +19,7 @@ async function login(oauthInfoReq, res) {
     }
   }
   catch (err) {
-    console.error('_login: ', err);
+    logger.error('_login: ', err);
   }
 }
 async function proceedOauthLogin(oauthReq, oauthDB, res) {
@@ -28,25 +28,24 @@ async function proceedOauthLogin(oauthReq, oauthDB, res) {
   if (oauthDB.reviewDayCount !== returnOauthInfo.reviewDayCount) {
     try {
       await cardService.updateReviewResultOauth(returnOauthInfo);
-      console.log('response: oauth', returnOauthInfo);
-      // res.json(returnOauthInfo);
+      logger.log('response: oauth', returnOauthInfo);
     }
     catch(err) {
-      console.error('oauthService:login:updateReviewResultOauth:CB] err', err);
+      logger.error('oauthService:login:updateReviewResultOauth:CB] err', err);
       res.status(500);
-      res.json( new Error(`Failed to update previous reviewed cards`));
+      return res.json( new Error(`Failed to update previous reviewed cards`));
     }
   }
   
   try {
     // 최종 로그인 시간 업데이트
     await mysqlDao.updateOauthLoginInfo(returnOauthInfo);
-    console.log(`OAUTH [${returnOauthInfo.email}] lastLoginDatetime[${returnOauthInfo.lastLoginDatetime}] is updated`);
-    res.json(returnOauthInfo);
+    logger.info(`OAUTH [${returnOauthInfo.email}] lastLoginDatetime[${returnOauthInfo.lastLoginDatetime}] is updated`);
+    return res.json(returnOauthInfo);
   }
   catch(err) {
-    console.error(`Failed to update current oauth login information`, err);
-    res.json(err);
+    logger.error(`Failed to update current oauth login information`, err);
+    return res.json(err);
   }
 
 }
@@ -57,11 +56,11 @@ async function proceedOauthLogin(oauthReq, oauthDB, res) {
 async function proceedRegisterOauth(oauthInfo) {
   try {
     const registerResult = await mysqlDao.insertOauth(oauthInfo);
-    console.info('OAUTH user[%s | %s %s] registered', oauthInfo.email, oauthInfo.givenName, oauthInfo.familyName);
+    logger.info('OAUTH user[%s | %s %s] registered', oauthInfo.email, oauthInfo.givenName, oauthInfo.familyName);
     return res.json({ reviewDayCount: 1, lastLoginDatetime: oauthInfo.lastLoginDatetime });
   }
   catch(err) {
-    console.error('registerOauth:CB] err', err);
+    logger.error('registerOauth:CB] err', err);
     return res.status(500);
   }
 }
