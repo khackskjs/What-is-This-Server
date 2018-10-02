@@ -19,7 +19,7 @@ var connection;
  * @param {String} sql 
  */
 function logDao(sql) {
-  console.log(`${sql};`);
+  logger.debug(`${sql};`);
 }
 
 function handleDisconnect() {
@@ -33,7 +33,7 @@ function handleDisconnect() {
   
   connection.connect(function(err) {
     if (err) {
-      console.error('Database connection failed: ' + err.stack);
+      logger.error('Database connection failed: ' + err.stack);
       return setTimeout(handleDisconnect, 2000);
     }
     
@@ -42,7 +42,7 @@ function handleDisconnect() {
 
 
   connection.on('error', function(err) {
-    console.log('db error', err);
+    logger.debug('db error', err);
     if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
       handleDisconnect();                         // lost due to either server restart, or a
     } else if (err.code === 'PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR') {
@@ -57,7 +57,7 @@ handleDisconnect();
 function addCard(userInput, cb) {
   let query = connection.query(`INSERT INTO ${CARD_TBL} SET ?`, userInput, (err, results, fields) => {
     if(err) {
-      return console.error(err);
+      return logger.error(err);
     }
     logDao(`result: ${JSON.stringify(results)}`);
     cb(err, results);
