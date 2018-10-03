@@ -22,7 +22,7 @@ var transport = new(winston.transports.DailyRotateFile)({
   timestamp: true,
   json: true,
   dirname: './logs',
-  filename: 'resource.monitoring-%DATE%.log',
+  filename: 'whatsThat-%DATE%.log',
   datePattern: 'YYYY-MM-DD',
   zippedArchive: true,
   maxSize: '20m',
